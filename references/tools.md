@@ -28,7 +28,7 @@ active sheet when omitted. The server is stateless — `tools/list` and
 | `data_profile_sheet` | One-call summary: dims, dtype histogram, missing, quantiles, top categoricals. |
 | `data_profile_column` | Deep single-column profile: full quantiles, outlier count, sparkline. |
 | `data_quick_info` | Multi-column stats **plus** cross-column views (correlation matrix, grouped boxplot, contingency) when 2+ columns are passed. |
-| `data_read_range` | A1-range read as markdown/JSON/CSV. 2000-row cap; page with `offset`. |
+| `data_read_range` | A1-range read as markdown/JSON/CSV. 2000-row cap; page with `offset`. `values: true` renders formula cells as evaluated results instead of raw `=` source. |
 | `data_get_cell` | One cell: raw source (formula text) and evaluated value. |
 | `data_list_validations` | Every validation rule on a sheet (range, kind, bounds, list items). |
 
@@ -36,11 +36,14 @@ active sheet when omitted. The server is stateless — `tools/list` and
 
 | Tool | Purpose |
 |---|---|
-| `edit_write_cells` | Bulk write values/formulas (leading `=`). Returns evaluated results. |
+| `edit_write_cells` | Bulk write values/formulas (leading `=`). Echoes raw stored values — formulas evaluate async; verify with `data_read_range values:true`. |
 | `edit_evaluate_formula` | Evaluate a formula without writing it anywhere. |
 | `edit_lookup_formula` | Docs for a formula by name (`SOLVE`, `SAMPLE.NORMAL`, `PROB.NORMAL.CDF`, …). |
 | `edit_clear_range` | Wipe contents in a range (or `'all'`); structure preserved. |
 | `edit_format_range` | Font/color/alignment/borders/number-format; only supplied fields change. |
+| `edit_set_col_widths` | Pixel width (20–800) or `autofit: true` for a column run (`'B'`, `'A:G'`). Auto-fit measures displayed strings — run it last. |
+| `edit_merge_cells` | Merge a range (`all`/`horizontal`/`vertical`), Merge & Center by default. Non-origin cells must be empty unless `force: true`. |
+| `edit_unmerge_cells` | Remove every merge region overlapping a range. |
 | `edit_set_validation` | Dropdowns and constraints (list/whole/decimal/date/time/textLength). Typed input only. |
 | `edit_clear_validation` | Remove rules overlapping a range (removed wholesale). |
 | `edit_insert_rows` / `edit_delete_rows` | 1-based row insert/delete. Delete indexing is quirky — see SKILL.md. |

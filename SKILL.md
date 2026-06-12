@@ -56,9 +56,12 @@ plot, and paper, so re-import data after a relaunch and encourage saving.
 6. **Suppress inline payloads when exporting.** `plot_create`, `plot_export`,
    and `paper_render` return inline SVG/base64 by default and responses can
    be huge. When writing to disk, pass `path` plus `inline: false`.
-7. **Verify writes.** `edit_write_cells` returns each cell's evaluated result
-   — check it instead of issuing a follow-up read. Sanity-check unfamiliar or
-   complex formulas with `edit_evaluate_formula` before committing them.
+7. **Verify writes.** `edit_write_cells` echoes the **raw** stored value, not
+   the evaluated result — formulas evaluate asynchronously after the batch
+   commits. To confirm formula outputs, follow up with `data_read_range`
+   passing `values: true` (or `data_get_cell` for one cell). Sanity-check
+   unfamiliar or complex formulas with `edit_evaluate_formula` before
+   committing them.
 
 ## Core workflows
 
@@ -104,8 +107,12 @@ short version:
    decimal precision per column; multi-section codes and `[Red]` work.
 4. Borders sparingly: medium bottom border on the header, thin top border +
    bold on totals — never `border: "all"`.
-5. No column-width / merge / conditional-formatting tools exist — use
-   `wrap_text` for long headers and a plain title row instead of merged cells.
+5. Merge the title and section banners across the table width with
+   `edit_merge_cells` (Merge & Center by default).
+6. Finish with `edit_set_col_widths` + `autofit: true` over the table's
+   columns — **always last**, since number formats change the rendered
+   strings auto-fit measures. A model with default 80 px label columns reads
+   as unfinished.
 
 ### Clean and transform
 

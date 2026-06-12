@@ -6,10 +6,27 @@ the fields you pass change, so build up in passes — base format first, then
 headers, then totals, then accents. A later pass never resets what an earlier
 pass set unless it names the same field.
 
-There are no MCP tools for column widths, row heights, merged cells, or
-conditional formatting — design within those limits (use `wrap_text: true`
-for long headers instead of widening columns; lead with a title row instead
-of merging cells).
+Layout tools: `edit_set_col_widths` sets pixel widths or auto-fits columns to
+their content, and `edit_merge_cells` / `edit_unmerge_cells` handle merged
+titles and banners. There are still no tools for row heights or conditional
+formatting — use `wrap_text: true` where a tall row would be needed.
+
+## Layout: widths and merges
+
+- **Auto-fit is the last step, always.** `edit_set_col_widths` with
+  `autofit: true` measures the *displayed* strings — number formats, fonts,
+  and evaluated formula results — so run it after every formatting pass, over
+  all columns the table touches (`cols: "A:G"`). Skipping it is the single
+  biggest "unstyled" tell: 80 px default columns truncate labels and currency.
+- Explicit widths (`width`, pixels, clamped 20–800) are for deliberate design:
+  a fixed 40 px spacer column, or pinning a label column so two stacked tables
+  align.
+- **Merge titles, not data.** `edit_merge_cells` across the table width for
+  the title row and section banners; content centers by default (pass
+  `center: false` to keep left alignment for banner text). Non-origin cells
+  must be empty or the call fails — pass `force: true` only when discarding
+  their contents is intended. `mode: "horizontal"` merges row-by-row (one
+  region per row), useful for multi-row banner blocks.
 
 ## Color conventions (financial-model standard)
 
@@ -73,17 +90,22 @@ The professional pattern:
 
 ## Worked example
 
-A P&L-style sheet with header in row 1, data in rows 2–13, total in row 14:
+A P&L-style sheet with a merged title, header row, data block, and total:
 
 ```
-edit_format_range range=A1:F1  bold=true font_color=#FFFFFF fill_color=#1F3864
+edit_merge_cells  range=A1:F1   center=true                # title banner
+edit_format_range range=A1      bold=true font_size=14
+edit_format_range range=A2:F2  bold=true font_color=#FFFFFF fill_color=#1F3864
                   align=center border=bottom border_style=medium
-edit_format_range range=B2:F14 number_format=$#,##0;($#,##0)
-edit_format_range range=A2:A14 align=left
-edit_format_range range=B2:D13 font_color=#0000C8        # hardcoded inputs only
-edit_format_range range=A14:F14 bold=true border=top border_style=thin
-edit_format_range range=A16     italic=true font_size=9 font_color=#808080  # footnote
+edit_format_range range=B3:F15 number_format=$#,##0;($#,##0)
+edit_format_range range=A3:A15 align=left
+edit_format_range range=B3:D14 font_color=#0000C8        # hardcoded inputs only
+edit_format_range range=A15:F15 bold=true border=top border_style=thin
+edit_format_range range=A17     italic=true font_size=9 font_color=#808080  # footnote
+edit_set_col_widths cols=A:F autofit=true                 # LAST — measures display strings
 ```
+
+(Title in row 1, header in row 2, data in rows 3–14, total in row 15.)
 
 Order matters only where passes touch the same field — apply the broad
 number-format pass before narrow font-color overlays so nothing is skipped,
@@ -95,8 +117,11 @@ and keep input-blue passes scoped to actual hardcoded cells (check with
 1. One number format per column; negatives in parentheses; consistent decimals.
 2. Inputs blue, formulas black — spot-check a few cells with `data_get_cell`.
 3. Header row formatted and bottom-bordered; totals bolded with a top border.
-4. No `border: "all"` anywhere; no more than two fill colors on the sheet.
-5. Footnotes/sources present in gray italic below the table.
-6. Formatting cannot be visually verified over MCP (`report_snapshot` captures
+4. Title/section banners merged across the table width.
+5. No `border: "all"` anywhere; no more than two fill colors on the sheet.
+6. Footnotes/sources present in gray italic below the table.
+7. `edit_set_col_widths autofit=true` ran **after** all other formatting.
+8. Formulas verified with `data_read_range values=true` (no `#`-errors).
+9. Formatting cannot be visually verified over MCP (`report_snapshot` captures
    data and plots, not styles) — state what was applied rather than claiming
    it "looks right".
